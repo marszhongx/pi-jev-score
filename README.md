@@ -175,6 +175,18 @@ export TYPESAFE_API_KEY="..."
 
 ## Install
 
+Install the published package:
+
+```bash
+pi install npm:pi-jev-score
+```
+
+Or install directly from GitHub:
+
+```bash
+pi install git:github.com/marszhongx/pi-jev-score
+```
+
 From a local checkout:
 
 ```bash

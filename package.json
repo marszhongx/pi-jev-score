@@ -2,14 +2,28 @@
   "name": "pi-jev-score",
   "version": "0.1.0",
   "description": "Pi extension that uses TypeSafe JEV to score final AI responses",
+  "author": "marszhong",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marszhongx/pi-jev-score.git"
+  },
+  "homepage": "https://github.com/marszhongx/pi-jev-score#readme",
+  "bugs": {
+    "url": "https://github.com/marszhongx/pi-jev-score/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "test": "tsx --test test/scoring.test.ts test/extension.test.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm test && npm run typecheck"
   },
   "keywords": [
     "pi-package",
