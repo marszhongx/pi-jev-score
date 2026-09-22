@@ -1,6 +1,6 @@
-import { TypeSafeClient } from "@typesafe-ai/sdk";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
+import { createJevClient, loadJevConfig, type JevConfig } from "./config.ts";
 import {
   buildEvaluationRequest,
   extractAssistantText,
@@ -35,33 +35,21 @@ const dimensionLabels: Record<ScoreDimension, string> = {
   clarity: "Clarity",
 };
 
-function apiKey(): string | undefined {
-  return process.env.JEV_API_KEY?.trim() || process.env.TYPESAFE_API_KEY?.trim() || undefined;
-}
+export function createDefaultJevDependencies(
+  config: JevConfig = loadJevConfig(),
+): JevScoreDependencies {
+  let client: ReturnType<typeof createJevClient> | undefined;
 
-let client: TypeSafeClient | undefined;
-
-async function evaluateWithJev(input: EvaluationInput, signal?: AbortSignal): Promise<ResponseScore> {
-  client ??= new TypeSafeClient({
-    apiKey: apiKey(),
-    timeout: 1_500,
-    retry: {
-      maxRetries: 1,
-      backoffInitialMs: 150,
-      backoffMaxMs: 400,
+  return {
+    isConfigured: () => config.apiKey !== undefined,
+    async evaluate(input, signal) {
+      client ??= createJevClient(config);
+      const startedAt = Date.now();
+      const response = await client.systemOne(buildEvaluationRequest(input), { signal });
+      return normalizeJevScore(response, Date.now() - startedAt);
     },
-    logLevel: "warn",
-  });
-
-  const startedAt = Date.now();
-  const response = await client.systemOne(buildEvaluationRequest(input), { signal });
-  return normalizeJevScore(response, Date.now() - startedAt);
+  };
 }
-
-const defaultDependencies: JevScoreDependencies = {
-  evaluate: evaluateWithJev,
-  isConfigured: () => apiKey() !== undefined,
-};
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -228,7 +216,7 @@ export function createJevScoreExtension(dependencies: JevScoreDependencies) {
         }
         if (!dependencies.isConfigured()) {
           ctx.ui.notify(
-            "JEV scoring is disabled. Set TYPESAFE_API_KEY (or JEV_API_KEY) and reload pi.",
+            "JEV scoring is disabled. Add apiKey to pi-jev-score.json in the pi agent directory, or set TYPESAFE_API_KEY/JEV_API_KEY, then reload pi.",
             "warning",
           );
           return;
@@ -239,4 +227,4 @@ export function createJevScoreExtension(dependencies: JevScoreDependencies) {
   };
 }
 
-export default createJevScoreExtension(defaultDependencies);
+export default createJevScoreExtension(createDefaultJevDependencies());

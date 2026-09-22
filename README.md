@@ -116,7 +116,7 @@ the extension constructs the following `System One` request. The TypeSafe SDK ad
 }
 ```
 
-The request is sent to `POST https://api.typesafe.ai/v1/systemone`. The API key is carried in the HTTP `Authorization` header and is not included in the JSON body.
+The request is sent to `POST <baseUrl>/v1/systemone`; `baseUrl` defaults to `https://api.typesafe.ai`. The API key is carried in the HTTP `Authorization` header and is not included in the JSON body.
 
 ### Score construction
 
@@ -166,11 +166,56 @@ The score is a semantic quality estimate, not proof that code changes, commands,
 - pi with extension support
 - A TypeSafe API key from [TypeSafe](https://docs.typesafe.ai)
 
-Set either environment variable:
+## Configuration
+
+Create `~/.pi/agent/pi-jev-score.json`:
+
+```json
+{
+  "apiKey": "...",
+  "baseUrl": "https://api.typesafe.ai"
+}
+```
+
+When `PI_CODING_AGENT_DIR` is set, place the file in that directory instead. Because the file contains a credential, restrict its permissions:
 
 ```bash
-export TYPESAFE_API_KEY="..."
-# JEV_API_KEY is also accepted for compatibility with jev-router.
+chmod 600 ~/.pi/agent/pi-jev-score.json
+```
+
+Both fields are optional. Non-empty values in the config file take precedence over environment variables. The fallback variables are:
+
+```bash
+export TYPESAFE_API_KEY="..."                 # JEV_API_KEY is also accepted
+export TYPESAFE_BASE_URL="https://api.typesafe.ai"
+```
+
+If `baseUrl` is omitted everywhere, the TypeSafe SDK default (`https://api.typesafe.ai`) is used. Run `/reload` after changing the config file or environment.
+
+### OpenRouter
+
+OpenRouter exposes a TypeSafe SDK-compatible System One endpoint. To use [Jev Latest on OpenRouter](https://openrouter.ai/~typesafe/jev-latest), configure:
+
+```json
+{
+  "apiKey": "sk-or-v1-...",
+  "baseUrl": "https://openrouter.ai/api"
+}
+```
+
+The SDK appends `/v1/systemone`, so the request goes to:
+
+```text
+https://openrouter.ai/api/v1/systemone
+```
+
+Do **not** use the model page URL (`https://openrouter.ai/~typesafe/jev-latest`) as `baseUrl`, and do not include `/v1/systemone` yourself. The extension uses the SDK default model ID `jev-latest`, which OpenRouter maps to its `~typesafe/jev-latest` alias. Requests are billed to the OpenRouter account associated with the configured key.
+
+The equivalent environment configuration is:
+
+```bash
+export TYPESAFE_API_KEY="$OPENROUTER_API_KEY"
+export TYPESAFE_BASE_URL="https://openrouter.ai/api"
 ```
 
 ## Install
@@ -201,7 +246,7 @@ npm install
 pi -e ./jev-score.ts
 ```
 
-After changing the API key or extension source, run `/reload` in pi.
+After changing the configuration or extension source, run `/reload` in pi.
 
 ## Behavior
 
@@ -213,7 +258,7 @@ After changing the API key or extension source, run `/reload` in pi.
 
 ## Privacy
 
-To produce a score, this extension sends the **exact user request and final assistant response** to the TypeSafe API. Thinking blocks and tool call payloads are not sent by this extension. Do not enable it for content that must remain entirely local.
+To produce a score, this extension sends the **exact user request and final assistant response** to the configured TypeSafe-compatible `baseUrl`. Thinking blocks and tool call payloads are not sent by this extension. The API key is stored as plaintext when placed in `pi-jev-score.json`, so keep that file private and do not commit it. Do not enable scoring for content that must remain entirely local.
 
 ## Development
 

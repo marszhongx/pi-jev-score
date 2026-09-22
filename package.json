@@ -1,6 +1,6 @@
 {
   "name": "pi-jev-score",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Pi extension that uses TypeSafe JEV to score final AI responses",
   "author": "marszhong",
   "type": "module",
@@ -21,7 +21,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "tsx --test test/scoring.test.ts test/extension.test.mjs",
+    "test": "tsx --test test/config.test.ts test/scoring.test.ts test/extension.test.mjs",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm test && npm run typecheck"
   },
@@ -36,6 +36,7 @@
   ],
   "files": [
     "jev-score.ts",
+    "config.ts",
     "scoring.ts",
     "README.md",
     "LICENSE"
