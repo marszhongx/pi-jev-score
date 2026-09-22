@@ -6,7 +6,7 @@ import {
   extractAssistantText,
   normalizeJevScore,
   SCORE_DIMENSIONS,
-} from "../scoring.ts";
+} from "../main.ts";
 
 const answer = (score: number, confidence: number) => ({
   type: "score" as const,

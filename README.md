@@ -164,43 +164,38 @@ The score is a semantic quality estimate, not proof that code changes, commands,
 
 - Node.js 20 or newer
 - pi with extension support
-- A TypeSafe API key from [TypeSafe](https://docs.typesafe.ai)
+- A TypeSafe API key from [TypeSafe](https://docs.typesafe.ai), or an OpenRouter key with credits
 
 ## Configuration
 
-Create `~/.pi/agent/pi-jev-score.json`:
-
-```json
-{
-  "apiKey": "...",
-  "baseUrl": "https://api.typesafe.ai"
-}
-```
-
-When `PI_CODING_AGENT_DIR` is set, place the file in that directory instead. Because the file contains a credential, restrict its permissions:
+The extension reads TypeSafe SDK environment variables. For TypeSafe directly:
 
 ```bash
-chmod 600 ~/.pi/agent/pi-jev-score.json
+export TYPESAFE_API_KEY="..."
 ```
 
-Both fields are optional. Non-empty values in the config file take precedence over environment variables. The fallback variables are:
+`JEV_API_KEY` is also accepted for compatibility with `jev-router` and takes precedence when both keys are set. The base URL is optional; the SDK defaults to `https://api.typesafe.ai`:
 
 ```bash
-export TYPESAFE_API_KEY="..."                 # JEV_API_KEY is also accepted
 export TYPESAFE_BASE_URL="https://api.typesafe.ai"
 ```
 
-If `baseUrl` is omitted everywhere, the TypeSafe SDK default (`https://api.typesafe.ai`) is used. Run `/reload` after changing the config file or environment.
+Set these in the shell environment that launches pi, then restart pi. If pi is already running after an environment change, exit and start it again; `/reload` does not change the parent process environment.
 
 ### OpenRouter
 
-OpenRouter exposes a TypeSafe SDK-compatible System One endpoint. To use [Jev Latest on OpenRouter](https://openrouter.ai/~typesafe/jev-latest), configure:
+OpenRouter exposes a TypeSafe SDK-compatible System One endpoint. To use [Jev Latest on OpenRouter](https://openrouter.ai/~typesafe/jev-latest):
 
-```json
-{
-  "apiKey": "sk-or-v1-...",
-  "baseUrl": "https://openrouter.ai/api"
-}
+```bash
+export TYPESAFE_API_KEY="$OPENROUTER_API_KEY"
+export TYPESAFE_BASE_URL="https://openrouter.ai/api"
+```
+
+Or set the OpenRouter key directly as `TYPESAFE_API_KEY`:
+
+```bash
+export TYPESAFE_API_KEY="sk-or-v1-..."
+export TYPESAFE_BASE_URL="https://openrouter.ai/api"
 ```
 
 The SDK appends `/v1/systemone`, so the request goes to:
@@ -209,14 +204,7 @@ The SDK appends `/v1/systemone`, so the request goes to:
 https://openrouter.ai/api/v1/systemone
 ```
 
-Do **not** use the model page URL (`https://openrouter.ai/~typesafe/jev-latest`) as `baseUrl`, and do not include `/v1/systemone` yourself. The extension uses the SDK default model ID `jev-latest`, which OpenRouter maps to its `~typesafe/jev-latest` alias. Requests are billed to the OpenRouter account associated with the configured key.
-
-The equivalent environment configuration is:
-
-```bash
-export TYPESAFE_API_KEY="$OPENROUTER_API_KEY"
-export TYPESAFE_BASE_URL="https://openrouter.ai/api"
-```
+Do **not** use the model page URL (`https://openrouter.ai/~typesafe/jev-latest`) as `TYPESAFE_BASE_URL`, and do not include `/v1/systemone` yourself. The extension uses the SDK default model ID `jev-latest`, which OpenRouter maps to its `~typesafe/jev-latest` alias. Requests are billed to the OpenRouter account associated with the configured key.
 
 ## Install
 
@@ -243,10 +231,10 @@ Or try it without installing:
 
 ```bash
 npm install
-pi -e ./jev-score.ts
+pi -e ./main.ts
 ```
 
-After changing the configuration or extension source, run `/reload` in pi.
+After changing the extension source, run `/reload` in pi. Restart pi after changing environment variables.
 
 ## Behavior
 
@@ -258,7 +246,7 @@ After changing the configuration or extension source, run `/reload` in pi.
 
 ## Privacy
 
-To produce a score, this extension sends the **exact user request and final assistant response** to the configured TypeSafe-compatible `baseUrl`. Thinking blocks and tool call payloads are not sent by this extension. The API key is stored as plaintext when placed in `pi-jev-score.json`, so keep that file private and do not commit it. Do not enable scoring for content that must remain entirely local.
+To produce a score, this extension sends the **exact user request and final assistant response** to the TypeSafe-compatible endpoint selected by `TYPESAFE_BASE_URL`. Thinking blocks and tool call payloads are not sent by this extension. Do not enable scoring for content that must remain entirely local.
 
 ## Development
 
